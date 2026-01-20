@@ -1,9 +1,10 @@
 import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 
 TOKEN = os.getenv("TOKEN")
 USERS_FILE = "users.txt"
+ADMIN_ID = 822510623  # Your Telegram ID
 
 def save_user(user_id):
     if not os.path.exists(USERS_FILE):
@@ -18,18 +19,18 @@ def save_user(user_id):
         with open(USERS_FILE, "a") as f:
             f.write(str(user_id) + "\n")
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    save_user(user_id)
-
+def main_menu():
     keyboard = [
         [InlineKeyboardButton("⬇ Download App", url="https://sites.google.com/view/admod/hitmaal")],
         [InlineKeyboardButton("🔥 Features", callback_data="features")],
         [InlineKeyboardButton("🔐 Privacy", callback_data="privacy")],
         [InlineKeyboardButton("🆘 Support", url="https://t.me/HitMaal_helper_Bot")]
     ]
+    return InlineKeyboardMarkup(keyboard)
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    save_user(user_id)
 
     await update.message.reply_text(
         "🔥 *Welcome to HitMaal!*\n\n"
@@ -38,7 +39,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "✔ 100% Private\n"
         "✔ App Lock Feature\n\n"
         "Choose an option below 👇",
-        reply_markup=reply_markup,
+        reply_markup=main_menu(),
         parse_mode="Markdown"
     )
 
@@ -68,6 +69,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ Access denied.")
+        return
+
     if not os.path.exists(USERS_FILE):
         count = 0
     else:
@@ -77,6 +82,10 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"👥 Total Users: {count}")
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ Access denied.")
+        return
+
     if not context.args:
         await update.message.reply_text("❌ Use: /broadcast Your message")
         return
@@ -100,6 +109,25 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"✅ Message sent to {sent} users.")
 
+# Auto Replies
+async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
+
+    if any(word in text for word in ["hi", "hello", "hey"]):
+        await update.message.reply_text("Hello 👋 Welcome to HitMaal!", reply_markup=main_menu())
+
+    elif "download" in text or "link" in text:
+        await update.message.reply_text(
+            "⬇ Download HitMaal App here:\nhttps://sites.google.com/view/admod/hitmaal",
+            reply_markup=main_menu()
+        )
+
+    elif "help" in text:
+        await update.message.reply_text("Need help? Click Support 👇", reply_markup=main_menu())
+
+    elif "app" in text:
+        await update.message.reply_text("HitMaal is a free 18+ web series app 🔥", reply_markup=main_menu())
+
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TOKEN).build()
 
@@ -107,6 +135,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("users", users))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_reply))
 
     print("Bot started...")
     app.run_polling()
