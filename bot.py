@@ -23,21 +23,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(user_id)
 
     keyboard = [
-        [InlineKeyboardButton("⬇ ऐप डाउनलोड करें", url="https://sites.google.com/view/admod/hitmaal")],
-        [InlineKeyboardButton("🔥 फीचर्स", callback_data="features")],
-        [InlineKeyboardButton("🔐 प्राइवेसी", callback_data="privacy")],
-        [InlineKeyboardButton("🆘 सपोर्ट", url="https://t.me/HitMaal_helper_Bot")]
+        [InlineKeyboardButton("⬇ Download App", url="https://sites.google.com/view/admod/hitmaal")],
+        [InlineKeyboardButton("🔥 Features", callback_data="features")],
+        [InlineKeyboardButton("🔐 Privacy", callback_data="privacy")],
+        [InlineKeyboardButton("🆘 Support", url="https://t.me/HitMaal_helper_Bot")]
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
-        "🔥 *HitMaal में आपका स्वागत है!*\n\n"
-        "✔ फ्री 18+ वेब सीरीज़\n"
-        "✔ बिना Ads\n"
-        "✔ 100% प्राइवेट\n"
-        "✔ App Lock फीचर\n\n"
-        "नीचे से ऑप्शन चुनें 👇",
+        "🔥 *Welcome to HitMaal!*\n\n"
+        "✔ Free 18+ Web Series\n"
+        "✔ No Ads\n"
+        "✔ 100% Private\n"
+        "✔ App Lock Feature\n\n"
+        "Choose an option below 👇",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
@@ -60,10 +60,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "privacy":
         await query.edit_message_text(
             "🔐 *Privacy Guarantee*\n\n"
-            "हम आपकी प्राइवेसी को सबसे ऊपर रखते हैं।\n"
-            "✔ कोई डेटा लीक नहीं\n"
+            "Your privacy is our top priority.\n"
+            "✔ No data leaks\n"
             "✔ App Lock\n"
-            "✔ Secure Access",
+            "✔ Secure access",
             parse_mode="Markdown"
         )
 
