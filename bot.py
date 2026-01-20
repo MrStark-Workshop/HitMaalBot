@@ -1,9 +1,8 @@
 import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackContext, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 TOKEN = os.getenv("TOKEN")
-
 USERS_FILE = "users.txt"
 
 def save_user(user_id):
@@ -19,7 +18,7 @@ def save_user(user_id):
         with open(USERS_FILE, "a") as f:
             f.write(str(user_id) + "\n")
 
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     save_user(user_id)
 
@@ -32,7 +31,7 @@ def start(update: Update, context: CallbackContext):
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    update.message.reply_text(
+    await update.message.reply_text(
         "🔥 *HitMaal में आपका स्वागत है!*\n\n"
         "✔ फ्री 18+ वेब सीरीज़\n"
         "✔ बिना Ads\n"
@@ -43,12 +42,12 @@ def start(update: Update, context: CallbackContext):
         parse_mode="Markdown"
     )
 
-def button(update: Update, context: CallbackContext):
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
 
     if query.data == "features":
-        query.edit_message_text(
+        await query.edit_message_text(
             "🔥 *HitMaal Features:*\n\n"
             "✔ Free Web Series\n"
             "✔ No Ads\n"
@@ -59,7 +58,7 @@ def button(update: Update, context: CallbackContext):
         )
 
     elif query.data == "privacy":
-        query.edit_message_text(
+        await query.edit_message_text(
             "🔐 *Privacy Guarantee*\n\n"
             "हम आपकी प्राइवेसी को सबसे ऊपर रखते हैं।\n"
             "✔ कोई डेटा लीक नहीं\n"
@@ -68,24 +67,24 @@ def button(update: Update, context: CallbackContext):
             parse_mode="Markdown"
         )
 
-def users(update: Update, context: CallbackContext):
+async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not os.path.exists(USERS_FILE):
         count = 0
     else:
         with open(USERS_FILE, "r") as f:
             count = len(f.read().splitlines())
 
-    update.message.reply_text(f"👥 Total Users: {count}")
+    await update.message.reply_text(f"👥 Total Users: {count}")
 
-def broadcast(update: Update, context: CallbackContext):
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        update.message.reply_text("❌ Use: /broadcast Your message")
+        await update.message.reply_text("❌ Use: /broadcast Your message")
         return
 
     message = " ".join(context.args)
 
     if not os.path.exists(USERS_FILE):
-        update.message.reply_text("No users yet.")
+        await update.message.reply_text("No users yet.")
         return
 
     with open(USERS_FILE, "r") as f:
@@ -94,24 +93,20 @@ def broadcast(update: Update, context: CallbackContext):
     sent = 0
     for user_id in users:
         try:
-            context.bot.send_message(chat_id=int(user_id), text=message)
+            await context.bot.send_message(chat_id=int(user_id), text=message)
             sent += 1
         except:
             pass
 
-    update.message.reply_text(f"✅ Message sent to {sent} users.")
-
-def main():
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher
-
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("users", users))
-    dp.add_handler(CommandHandler("broadcast", broadcast))
-    dp.add_handler(CallbackQueryHandler(button))
-
-    updater.start_polling()
-    updater.idle()
+    await update.message.reply_text(f"✅ Message sent to {sent} users.")
 
 if __name__ == "__main__":
-    main()
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("users", users))
+    app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CallbackQueryHandler(button))
+
+    print("Bot started...")
+    app.run_polling()
